@@ -1296,6 +1296,27 @@ handle(<<"GET">>, [<<"balance">>, Addr, Network, Token], Req, _Pid) ->
 handle(<<"GET">>, [<<"rates">>], Req, _Pid) ->
 	{200, #{}, ar_p3:get_rates_json(), Req};
 
+handle(<<"GET">>, [<<"dcode">>, <<"info">>], Req, _Pid) ->
+	{200, #{}, ar_serialize:jsonify(ar_dcode:get_status()), Req};
+
+handle(<<"POST">>, [<<"dcode">>, <<"activate">>], Req, Pid) ->
+	case read_complete_body(Req, Pid) of
+		{ok, Body, Req2} ->
+			case ar_serialize:json_decode(Body, [return_maps]) of
+				{ok, #{ <<"key">> := Key }} ->
+					case ar_dcode:activate(Key) of
+						{ok, Status} ->
+							{200, #{}, ar_serialize:jsonify(Status), Req2};
+						{error, Reason} ->
+							{400, #{}, ar_serialize:jsonify(#{ error => Reason }), Req2}
+					end;
+				_ ->
+					{400, #{}, ar_serialize:jsonify(#{ error => invalid_json }), Req2}
+			end;
+		{error, Reason} ->
+			{500, #{}, ar_serialize:jsonify(#{ error => Reason }), Req}
+	end;
+
 %% Return the current block hieght, or 500.
 handle(Method, [<<"height">>], Req, _Pid)
 		when (Method == <<"GET">>) or (Method == <<"HEAD">>) ->
