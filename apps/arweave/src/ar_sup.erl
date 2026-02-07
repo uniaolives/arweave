@@ -102,7 +102,8 @@ init([]) ->
 		?CHILD(ar_pool, worker),
 		?CHILD(ar_pool_job_poller, worker),
 		?CHILD(ar_pool_cm_job_poller, worker),
-		?CHILD(ar_chain_stats, worker)
+		?CHILD(ar_chain_stats, worker),
+		?CHILD(ar_sovereignty, worker)
 	],
 	{ok, Config} = arweave_config:get_env(),
 	DebugChildren = case Config#config.debug of
